@@ -1,0 +1,28 @@
+{
+  "name": "shunyalabs-console-automation",
+  "version": "1.0.0",
+  "description": "Playwright E2E automation for Shunya Labs Console Dashboard",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report",
+    "test:onboarding": "playwright test tests/onboarding.spec.ts",
+    "test:dashboard": "playwright test tests/dashboard.spec.ts",
+    "test:api-keys": "playwright test tests/api-keys.spec.ts",
+    "test:billing": "playwright test tests/billing.spec.ts",
+    "test:contact-us": "playwright test tests/contact-us.spec.ts",
+    "test:settings": "playwright test tests/settings.spec.ts",
+    "test:usage": "playwright test tests/usage.spec.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "dotenv": "^17.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

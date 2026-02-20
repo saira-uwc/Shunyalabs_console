@@ -118,14 +118,23 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-
 .modal-head h2{font-size:17px}
 .modal-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--panel-border);background:var(--panel-soft);color:var(--text);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
 .modal-body{padding:20px 24px}
-.modal-filters{display:flex;gap:6px;margin:16px 0}
+.modal-filters{display:flex;gap:6px;margin:16px 0;align-items:center}
+.modal-filters .filter-label{font-size:13px;color:var(--muted);margin-right:4px}
 .modal-filters .btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.modal-test{background:var(--panel-soft);border:1px solid var(--panel-border);border-radius:10px;padding:12px 16px;margin-bottom:8px}
-.modal-test .mt-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.modal-test .mt-title{font-weight:600;font-size:14px}
-.modal-test .mt-meta{font-size:12px;color:var(--muted)}
-.modal-test .mt-error{margin-top:8px;padding:8px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:12px;color:#fca5a5;font-family:monospace;white-space:pre-wrap;max-height:150px;overflow-y:auto}
-.modal-actions{display:flex;gap:8px;padding:16px 24px;border-top:1px solid var(--panel-border)}
+.modal-filters .btn.active-pass{background:var(--pass);border-color:var(--pass);color:#fff}
+.modal-filters .btn.active-fail{background:var(--fail);border-color:var(--fail);color:#fff}
+.modal-test{background:var(--panel-soft);border:1px solid var(--panel-border);border-radius:10px;padding:14px 18px;margin-bottom:10px}
+.modal-test .mt-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.modal-test .mt-title{font-weight:600;font-size:14px;flex:1;margin-right:8px}
+.modal-test .mt-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.modal-test .mt-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;background:var(--panel);border:1px solid var(--panel-border);color:var(--muted)}
+.modal-test .mt-error{margin-top:10px;padding:10px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:12px;color:#fca5a5;font-family:'Fira Code',monospace;white-space:pre-wrap;max-height:180px;overflow-y:auto;line-height:1.6}
+.modal-test .mt-attachments{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.modal-test .attach-link{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;transition:.15s;border:1px solid var(--panel-border);background:var(--panel);color:var(--muted)}
+.modal-test .attach-link:hover{border-color:var(--accent);color:var(--accent)}
+.modal-test .attach-link svg{width:13px;height:13px;fill:currentColor}
+.modal-actions{display:flex;gap:8px;padding:16px 24px;border-top:1px solid var(--panel-border);align-items:center}
+.modal-actions .spacer{flex:1}
 
 /* ── Print ── */
 @media print{header,.tabs,.modal-overlay{display:none!important}.tab-content{display:block!important;padding:10px}.card{break-inside:avoid;box-shadow:none;border:1px solid #333}}
@@ -203,6 +212,8 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-
     <div class="modal-actions">
       <button class="btn" id="modalExportBtn">Export This Run</button>
       <button class="btn" onclick="window.print()">Print as Proof</button>
+      <div class="spacer"></div>
+      <button class="btn" onclick="closeModal()">Close</button>
     </div>
   </div>
 </div>
@@ -569,11 +580,13 @@ function openRunModal(runId) {
   `;
 
   if (isLatest && latestData.tests) {
+    const failCount = s.failed + (s.timedOut||0);
     body += `
       <div class="modal-filters">
-        <button class="btn active" onclick="filterModal('all',this)">All</button>
-        <button class="btn" onclick="filterModal('passed',this)">Passed</button>
-        <button class="btn" onclick="filterModal('failed',this)">Failed</button>
+        <span class="filter-label">Filter:</span>
+        <button class="btn active" onclick="filterModal('all',this)">All (${s.total})</button>
+        <button class="btn" onclick="filterModal('passed',this)">Passed (${s.passed})</button>
+        <button class="btn" onclick="filterModal('failed',this)">Failed (${failCount})</button>
       </div>
       <div id="modalTests">${renderModalTests(latestData.tests, 'all')}</div>
     `;
@@ -590,7 +603,7 @@ function openRunModal(runId) {
     `).join('');
   }
 
-  document.getElementById('modalTitle').textContent = `Run ${run.id.substring(0, 8)} — ${formatDate(run.startedAt)}`;
+  document.getElementById('modalTitle').textContent = `Test Run – ${formatModalDate(run.startedAt)}`;
   document.getElementById('modalBody').innerHTML = body;
   document.getElementById('modalOverlay').classList.add('open');
 
@@ -607,22 +620,74 @@ function renderModalTests(tests, filter) {
 
   if (!filtered.length) return '<p style="color:var(--muted);padding:12px">No tests match this filter.</p>';
 
-  return filtered.map(t => `
-    <div class="modal-test">
-      <div class="mt-head">
-        <div class="mt-title">${esc(t.title)}</div>
-        <span class="pill ${t.status === 'passed' ? 'pill-pass' : 'pill-fail'}">${t.status}</span>
+  return filtered.map(t => {
+    const statusClass = t.status === 'passed' ? 'pill-pass' : 'pill-fail';
+
+    // Build attachment links
+    let attachHtml = '';
+    if (t.attachments && t.attachments.length > 0) {
+      const links = t.attachments.map(a => {
+        const icon = getAttachIcon(a.name, a.contentType);
+        const label = getAttachLabel(a.name, a.contentType);
+        return `<span class="attach-link" title="${esc(a.name)}">${icon} ${label}</span>`;
+      }).join('');
+      attachHtml = `<div class="mt-attachments">${links}</div>`;
+    } else if (t.status !== 'passed') {
+      // Show placeholder attachment buttons for failed tests even without data
+      attachHtml = `<div class="mt-attachments">
+        <span class="attach-link">${svgScreenshot} Screenshot</span>
+        <span class="attach-link">${svgVideo} Video</span>
+        <span class="attach-link">${svgAttach} Trace</span>
+      </div>`;
+    }
+
+    return `
+      <div class="modal-test">
+        <div class="mt-head">
+          <div class="mt-title">${esc(t.title)}</div>
+          <span class="pill ${statusClass}">${t.status}</span>
+        </div>
+        <div class="mt-meta">
+          <span class="mt-tag">Playwright &middot; ${t.moduleLabel}</span>
+          <span>${formatDuration(t.durationMs)}</span>
+        </div>
+        ${t.error ? `<div class="mt-error">${esc(t.error)}</div>` : ''}
+        ${attachHtml}
       </div>
-      <div class="mt-meta">${t.moduleLabel} &middot; ${formatDuration(t.durationMs)}</div>
-      ${t.error ? `<div class="mt-error">${esc(t.error)}</div>` : ''}
-    </div>
-  `).join('');
+    `;
+  }).join('');
+}
+
+// SVG icons for attachment links
+const svgScreenshot = '<svg viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-5z"/></svg>';
+const svgVideo = '<svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>';
+const svgAttach = '<svg viewBox="0 0 24 24"><path d="M16.5 6v11.5a4 4 0 01-8 0V5a2.5 2.5 0 015 0v10.5a1 1 0 01-2 0V6h-1.5v9.5a2.5 2.5 0 005 0V5a4 4 0 00-8 0v12.5a5.5 5.5 0 0011 0V6H16.5z"/></svg>';
+
+function getAttachIcon(name, contentType) {
+  if (contentType && contentType.startsWith('image/')) return svgScreenshot;
+  if (contentType && contentType.startsWith('video/')) return svgVideo;
+  if (name && name.toLowerCase().includes('screenshot')) return svgScreenshot;
+  if (name && name.toLowerCase().includes('video')) return svgVideo;
+  return svgAttach;
+}
+
+function getAttachLabel(name, contentType) {
+  if (contentType && contentType.startsWith('image/')) return 'Screenshot';
+  if (contentType && contentType.startsWith('video/')) return 'Video';
+  if (name && name.toLowerCase().includes('screenshot')) return 'Screenshot';
+  if (name && name.toLowerCase().includes('video')) return 'Video';
+  if (name && name.toLowerCase().includes('trace')) return 'Trace';
+  return 'Attachment';
 }
 
 function filterModal(filter, btn) {
   modalFilter = filter;
-  document.querySelectorAll('.modal-filters .btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('.modal-filters .btn').forEach(b => {
+    b.classList.remove('active', 'active-pass', 'active-fail');
+  });
+  if (filter === 'passed') btn.classList.add('active-pass');
+  else if (filter === 'failed') btn.classList.add('active-fail');
+  else btn.classList.add('active');
   document.getElementById('modalTests').innerHTML = renderModalTests(latestData.tests, filter);
 }
 
@@ -677,6 +742,14 @@ function downloadJSON(data, filename) {
    ══════════════════════════════════════════════════════════ */
 function formatDate(iso) {
   return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+}
+function formatModalDate(iso) {
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toLowerCase();
+  return `${dd}/${mm}/${yyyy}, ${time}`;
 }
 function formatShortDate(iso) {
   return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });

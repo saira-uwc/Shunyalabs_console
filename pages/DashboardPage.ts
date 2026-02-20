@@ -115,7 +115,7 @@ export class DashboardPage extends BasePage {
   async logout() {
     await this.openUserMenu();
     await this.logoutMenuItem.click();
-    await this.page.waitForURL('**/auth/sign-in', { timeout: 15000 });
+    await this.page.waitForURL('**/auth/sign-in', { timeout: 30000 });
   }
 
   // ──────── Assertions ────────

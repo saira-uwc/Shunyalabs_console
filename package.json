@@ -14,7 +14,10 @@
     "test:billing": "playwright test tests/billing.spec.ts",
     "test:contact-us": "playwright test tests/contact-us.spec.ts",
     "test:settings": "playwright test tests/settings.spec.ts",
-    "test:usage": "playwright test tests/usage.spec.ts"
+    "test:usage": "playwright test tests/usage.spec.ts",
+    "dashboard:generate": "node scripts/generate-dashboard.js",
+    "dashboard:run": "npx playwright test && node scripts/generate-dashboard.js",
+    "dashboard:preview": "npx playwright test && node scripts/generate-dashboard.js && open docs/index.html"
   },
   "keywords": [],
   "author": "",

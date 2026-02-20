@@ -3,5 +3,6 @@ dist/
 playwright-report/
 test-results/
 playwright/.auth/
+reports/
 .env
 *.log

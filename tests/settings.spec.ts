@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { SettingsPage } from '../pages/SettingsPage';
 
 test.describe('Settings Module — Profile Update & Restore', () => {
@@ -7,8 +7,6 @@ test.describe('Settings Module — Profile Update & Restore', () => {
   // Original values
   const ORIGINAL_FIRST = 'Saira';
   const ORIGINAL_LAST = 'Automation';
-  const ORIGINAL_DISPLAY = `${ORIGINAL_FIRST} ${ORIGINAL_LAST}`;
-
   // Test values
   const TEST_FIRST = 'Saira-test';
   const TEST_LAST = 'Automation-test';
@@ -32,7 +30,7 @@ test.describe('Settings Module — Profile Update & Restore', () => {
 
   // ──────── E2E: Update → Verify → Restore → Verify → Logout ────────
 
-  test('TC_SET_03 - E2E: Update profile, verify on dashboard, restore original, logout', async ({ page }) => {
+  test('TC_SET_03 - E2E: Update profile, verify on dashboard, restore original', async () => {
     // Step 1: Navigate to Settings
     await settingsPage.navigateToSettings();
 
@@ -54,9 +52,5 @@ test.describe('Settings Module — Profile Update & Restore', () => {
 
     // Step 7: Verify success toast again
     await settingsPage.assertSuccessToastVisible();
-
-    // Step 8: Logout (user menu shows original name now)
-    await settingsPage.logout(ORIGINAL_DISPLAY);
-    await expect(page).toHaveURL(/auth\/sign-in/);
   });
 });

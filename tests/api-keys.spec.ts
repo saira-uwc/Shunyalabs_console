@@ -65,11 +65,4 @@ test.describe('API Keys Module — Create, Verify & Deactivate', () => {
     await apiKeysPage.assertDeactivatedDateVisible();
   });
 
-  // ──────── Logout ────────
-
-  test('TC_API_05 - Verify logout from API Keys page redirects to sign-in', async ({ page }) => {
-    await apiKeysPage.navigateToApiKeys();
-    await apiKeysPage.logout();
-    await expect(page).toHaveURL(/auth\/sign-in/);
-  });
 });

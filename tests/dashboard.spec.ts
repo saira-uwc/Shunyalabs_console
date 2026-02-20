@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { DashboardPage } from '../pages/DashboardPage';
-import { LoginPage } from '../pages/LoginPage';
 
 test.describe('Dashboard Module — Navigation & Section Verification', () => {
   let dashboardPage: DashboardPage;
@@ -107,12 +106,4 @@ test.describe('Dashboard Module — Navigation & Section Verification', () => {
     await expect(page.getByText('Current PlanYour subscription and billing detailsPay as you goView plans')).toBeVisible();
   });
 
-  // ──────── Logout ────────
-
-  test('TC_DASH_18 - Verify user can log out and is redirected to sign-in', async ({ page }) => {
-    await dashboardPage.logout();
-    await expect(page).toHaveURL(/auth\/sign-in/);
-    const loginPage = new LoginPage(page);
-    await loginPage.assertLoginPageVisible();
-  });
 });

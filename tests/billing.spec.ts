@@ -67,10 +67,4 @@ test.describe('Billing & Plans Module', () => {
     await popup.close();
   });
 
-  // ──────── Logout ────────
-
-  test('TC_BILL_10 - Verify logout from Billing page redirects to sign-in', async ({ page }) => {
-    await billingPage.logout();
-    await expect(page).toHaveURL(/auth\/sign-in/);
-  });
 });

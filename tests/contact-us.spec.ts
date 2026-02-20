@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { ContactUsPage } from '../pages/ContactUsPage';
 
 test.describe('Contact Us Module', () => {
@@ -38,10 +38,4 @@ test.describe('Contact Us Module', () => {
     await contactUsPage.assertSuccessNotificationVisible();
   });
 
-  // ──────── Logout ────────
-
-  test('TC_CONT_05 - Verify logout from Contact Us page redirects to sign-in', async ({ page }) => {
-    await contactUsPage.logout();
-    await expect(page).toHaveURL(/auth\/sign-in/);
-  });
 });

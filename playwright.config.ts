@@ -12,6 +12,7 @@ export default defineConfig({
   reporter: [
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['list'],
+    ['./utils/google-sheets-reporter.ts'],
   ],
   timeout: 60000,
   expect: {

@@ -11,7 +11,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -26,20 +26,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright OS deps (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Create .env file
         run: |
-          cat > .env <<EOF
-          BASE_URL=https://console.shunyalabs.ai
-          LOGIN_URL=https://console.shunyalabs.ai/auth/sign-in
-          TEST_EMAIL=${{ secrets.TEST_EMAIL }}
-          TEST_PASSWORD=${{ secrets.TEST_PASSWORD }}
-          GOOGLE_APPS_SCRIPT_URL=${{ secrets.GOOGLE_APPS_SCRIPT_URL }}
-          EMAIL_WEB_APP_URL=${{ secrets.EMAIL_WEB_APP_URL }}
-          REPORT_RECIPIENTS=${{ secrets.REPORT_RECIPIENTS }}
-          EOF
+          echo "BASE_URL=https://console.shunyalabs.ai" > .env
+          echo "LOGIN_URL=https://console.shunyalabs.ai/auth/sign-in" >> .env
+          echo "TEST_EMAIL=${{ secrets.TEST_EMAIL }}" >> .env
+          echo "TEST_PASSWORD=${{ secrets.TEST_PASSWORD }}" >> .env
+          echo "GOOGLE_APPS_SCRIPT_URL=${{ secrets.GOOGLE_APPS_SCRIPT_URL }}" >> .env
+          echo "EMAIL_WEB_APP_URL=${{ secrets.EMAIL_WEB_APP_URL }}" >> .env
+          echo "REPORT_RECIPIENTS=${{ secrets.REPORT_RECIPIENTS }}" >> .env
 
       - name: Run Playwright tests
         run: npx playwright test

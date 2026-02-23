@@ -235,9 +235,10 @@ calYear = now.getFullYear();
 /* ══════════════════════════════════════════════════════════
    INIT — fetch data and render
    ══════════════════════════════════════════════════════════ */
+const cacheBust = '?t=' + Date.now();
 Promise.all([
-  fetch('./data/latest.json').then(r => r.ok ? r.json() : null).catch(() => null),
-  fetch('./history/runs.json').then(r => r.ok ? r.json() : []).catch(() => []),
+  fetch('./data/latest.json' + cacheBust).then(r => r.ok ? r.json() : null).catch(() => null),
+  fetch('./history/runs.json' + cacheBust).then(r => r.ok ? r.json() : []).catch(() => []),
 ]).then(([latest, history]) => {
   latestData = latest;
   historyData = history || [];

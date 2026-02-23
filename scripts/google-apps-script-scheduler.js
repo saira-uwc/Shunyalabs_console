@@ -1,5 +1,5 @@
 /**
- * Google Apps Script — Scheduled Test Runner
+ * Google Apps Script — Scheduled Test Runner & Email Report
  *
  * This file is a REFERENCE for Google Apps Script (not executed by Node.js).
  * Copy this code into a new Google Apps Script project at https://script.google.com
@@ -11,16 +11,21 @@
  *    - GITHUB_OWNER  → saira-uwc
  *    - GITHUB_REPO   → Shunyalabs_console
  *    - GITHUB_PAT    → your GitHub Personal Access Token (needs "repo" scope)
- * 4. Go to Triggers > Add Trigger:
- *    - Function: triggerRunTests
- *    - Event source: Time-driven
- *    - Type: choose your frequency (e.g., every day at 9am)
+ * 4. Go to Triggers > Add Trigger (create TWO triggers):
+ *
+ *    Trigger 1 — Run Tests (scheduled throughout the day):
+ *      Function: triggerRunTests
+ *      Event source: Time-driven
+ *      Type: choose your frequency (e.g., every 6 hours, or specific times)
+ *
+ *    Trigger 2 — Send Email Report (end of day):
+ *      Function: triggerSendEmail
+ *      Event source: Time-driven
+ *      Type: Day timer → e.g., 6pm to 7pm
  *
  * How it works:
- * - triggerRunTests() sends a repository_dispatch event to GitHub
- * - GitHub Actions picks it up and runs the "Run Tests & Update Dashboard" workflow
- * - After tests complete, dashboard data is committed and pushed
- * - GitHub Pages auto-deploys the updated dashboard
+ * - triggerRunTests() → runs tests, updates sheets & dashboard, sends email
+ * - triggerSendEmail() → sends email report only (using latest test data)
  */
 
 function postDispatch(eventType) {
@@ -63,9 +68,19 @@ function postDispatch(eventType) {
 }
 
 /**
- * Trigger function — attach this to a time-driven trigger.
- * Sends "run-tests" dispatch to GitHub Actions.
+ * Trigger 1 — Run Tests
+ * Attach this to a time-driven trigger (e.g., every 6 hours).
+ * Runs tests → updates sheets → generates dashboard → sends email → pushes.
  */
 function triggerRunTests() {
   postDispatch("run-tests");
+}
+
+/**
+ * Trigger 2 — Send Email Report Only
+ * Attach this to a time-driven trigger (e.g., end of day at 6pm).
+ * Sends email report using the latest test data without re-running tests.
+ */
+function triggerSendEmail() {
+  postDispatch("send-email");
 }

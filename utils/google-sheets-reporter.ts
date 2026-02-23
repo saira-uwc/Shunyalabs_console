@@ -40,7 +40,7 @@ class GoogleSheetsReporter implements Reporter {
     const suiteName = test.parent?.title || '';
     const description = `[${suiteName}] ${testName}`;
 
-    // Format date/time: Feb 19, 2026 2:30 PM
+    // Format date/time in IST: Feb 19, 2026 2:30 PM
     const now = new Date();
     const updateDateTime = now.toLocaleString('en-US', {
       month: 'short',
@@ -49,6 +49,7 @@ class GoogleSheetsReporter implements Reporter {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      timeZone: 'Asia/Kolkata',
     });
 
     // Status

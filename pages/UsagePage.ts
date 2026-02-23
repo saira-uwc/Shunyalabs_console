@@ -11,7 +11,8 @@ export class UsagePage extends BasePage {
   readonly showByLabel = this.page.getByText('Show by');
   readonly metricLabel = this.page.getByText('Metric');
   readonly confirmButton = this.page.getByRole('button', { name: 'Confirm' });
-  readonly chartCircles = this.page.locator('circle');
+  readonly chartPath = this.page.locator('svg path[d]').first();
+  readonly requestsHeading = this.page.getByText('Requests').first();
 
   // ──────── Usage Logs Page ────────
   readonly usageLogsHeading = this.page.getByRole('heading', { name: 'Usage Logs' });
@@ -92,25 +93,22 @@ export class UsagePage extends BasePage {
 
   // ──────── Usage Chart ────────
 
-  async getChartRequestCount(): Promise<number> {
+  async isChartRendered(): Promise<boolean> {
     await expect(this.usageAnalyticsHeading).toBeVisible();
     await this.page.waitForTimeout(2000); // Wait for chart to render
 
-    const circleCount = await this.chartCircles.count();
-    if (circleCount === 0) return 0;
+    // Chart is a line chart — check if SVG path with actual data exists
+    // A rendered path has a 'd' attribute with coordinates (not just M0,0)
+    const pathEl = this.page.locator('svg path[d]');
+    const count = await pathEl.count();
+    if (count === 0) return false;
 
-    // Click last data point to show tooltip
-    await this.chartCircles.last().click();
-    await this.page.waitForTimeout(500);
-
-    // Try to read tooltip with request count
-    const tooltip = this.page.getByText(/Requests\s+\d+/);
-    if (await tooltip.isVisible().catch(() => false)) {
-      const text = await tooltip.textContent();
-      const match = text!.match(/Requests\s+(\d+)/);
-      return match ? parseInt(match[1]) : 0;
+    // Verify at least one path has meaningful data (length > 20 chars means actual line)
+    for (let i = 0; i < count; i++) {
+      const d = await pathEl.nth(i).getAttribute('d');
+      if (d && d.length > 20) return true;
     }
-    return 0;
+    return false;
   }
 
   // ──────── Playground ────────

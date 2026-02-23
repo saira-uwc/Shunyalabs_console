@@ -21,9 +21,7 @@ const LATEST_PATH = path.join(ROOT, 'docs', 'data', 'latest.json');
 const EMAIL_URL = process.env.EMAIL_WEB_APP_URL || '';
 const RECIPIENTS = process.env.REPORT_RECIPIENTS || '';
 const DASHBOARD_URL = 'https://saira-uwc.github.io/Shunyalabs_console/';
-const SHEETS_URL = process.env.GOOGLE_APPS_SCRIPT_URL
-  ? 'https://docs.google.com/spreadsheets'
-  : '';
+const SHEETS_URL = process.env.GOOGLE_SHEETS_URL || 'https://docs.google.com/spreadsheets/d/1GfMd1xcNuaagSpjvAENlZrBrWbYr2JsIXHSvFwK0rHo/edit?gid=0#gid=0';
 
 function main() {
   if (!EMAIL_URL) {
@@ -125,10 +123,8 @@ function buildEmailHTML(data) {
   let buttons = `
     <a href="${DASHBOARD_URL}" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;margin-right:12px">📊 View Full Dashboard</a>`;
 
-  if (SHEETS_URL) {
-    buttons += `
+  buttons += `
     <a href="${SHEETS_URL}" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">📋 View Test Cases</a>`;
-  }
 
   return `
 <!DOCTYPE html>

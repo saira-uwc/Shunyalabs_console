@@ -165,6 +165,7 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-
     </div>
   </div>
   <div class="header-actions">
+    <span id="runCountLabel" style="font-size:12px;color:var(--accent);font-weight:600;background:var(--accent-soft);padding:4px 10px;border-radius:6px"></span>
     <span id="lastRunLabel"></span>
     <div class="dropdown" id="exportDropdown">
       <button class="btn" onclick="toggleDropdown()">Export &#9662;</button>
@@ -245,6 +246,8 @@ Promise.all([
     renderCurrentRun(latestData);
     document.getElementById('lastRunLabel').textContent =
       'Last run: ' + formatDate(latestData.startedAt);
+    document.getElementById('runCountLabel').textContent =
+      'Total Runs: ' + historyData.length;
   } else {
     document.getElementById('currentTab').innerHTML =
       '<div class="empty-state"><h3>No Data Yet</h3><p>Run your tests first: <code>npm run dashboard:run</code></p></div>';
@@ -434,6 +437,12 @@ function renderHistory(runs) {
     return;
   }
 
+  // Summary stats
+  const totalRuns = runs.length;
+  const perfectRuns = runs.filter(r => r.passRate === 100).length;
+  const avgPassRate = totalRuns > 0 ? Math.round(runs.reduce((s, r) => s + r.passRate, 0) / totalRuns) : 0;
+  const uniqueDays = new Set(runs.map(r => new Date(r.startedAt).toDateString())).size;
+
   // Group by date
   const groups = {};
   for (const r of runs) {
@@ -442,7 +451,14 @@ function renderHistory(runs) {
     groups[dateKey].push(r);
   }
 
-  tab.innerHTML = Object.entries(groups).map(([date, dateRuns]) => `
+  tab.innerHTML = `
+    <div class="grid stats" style="margin-bottom:24px">
+      <div class="card stat-card"><div class="label">Total Runs</div><div class="value" style="color:var(--accent)">${totalRuns}</div><div class="sub">across ${uniqueDays} day${uniqueDays !== 1 ? 's' : ''}</div></div>
+      <div class="card stat-card"><div class="label">Perfect Runs</div><div class="value" style="color:var(--pass)">${perfectRuns}</div><div class="sub">${totalRuns > 0 ? Math.round(perfectRuns/totalRuns*100) : 0}% of all runs</div></div>
+      <div class="card stat-card"><div class="label">Avg Pass Rate</div><div class="value" style="color:${avgPassRate >= 80 ? 'var(--pass)' : avgPassRate >= 50 ? 'var(--warn)' : 'var(--fail)'}">${avgPassRate}%</div><div class="sub">across all runs</div></div>
+      <div class="card stat-card"><div class="label">Latest Result</div><div class="value" style="color:${runs[0].passRate >= 80 ? 'var(--pass)' : 'var(--warn)'}">${runs[0].passRate}%</div><div class="sub">${runs[0].summary.passed}/${runs[0].summary.total} passed</div></div>
+    </div>
+  ` + Object.entries(groups).map(([date, dateRuns]) => `
     <div class="history-group">
       <h3>${date}</h3>
       <div class="history-cards">

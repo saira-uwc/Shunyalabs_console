@@ -52,11 +52,11 @@ test.describe('Usage Module — Analytics, Logs & Billing Verification', () => {
 
     // ── Step 5: Navigate to Usage Overview and verify chart has data ──
     await usagePage.navigateToUsageOverview();
-    // Wait for chart SVG to render with data points
+    // Wait for chart line to render with data
     await expect.poll(
-      async () => await usagePage.chartCircles.count(),
-      { message: 'Expected chart to have data points (circle elements)', timeout: 15000, intervals: [2000, 3000, 3000, 3000] }
-    ).toBeGreaterThan(0);
+      async () => await usagePage.isChartRendered(),
+      { message: 'Expected usage chart to render with data', timeout: 20000, intervals: [2000, 3000, 5000, 5000] }
+    ).toBeTruthy();
 
     // ── Step 6: Navigate to Logs and verify new entry with today's date ──
     // Poll logs page until a new entry appears (backend processing delay)

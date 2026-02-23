@@ -21,6 +21,7 @@ const LATEST_PATH = path.join(ROOT, 'docs', 'data', 'latest.json');
 const HISTORY_PATH = path.join(ROOT, 'docs', 'history', 'runs.json');
 const CSV_CURRENT = path.join(ROOT, 'docs', 'exports', 'current-run.csv');
 const CSV_ALL = path.join(ROOT, 'docs', 'exports', 'all-runs-summary.csv');
+const ARTIFACTS_DIR = path.join(ROOT, 'docs', 'artifacts');
 const MAX_HISTORY = 100;
 
 // ── Module name mapping ──
@@ -63,6 +64,7 @@ function extractTests(suite, tests = []) {
 
           const attachments = (result.attachments || []).map(a => ({
             name: a.name,
+            sourcePath: a.path || '',
             path: a.path ? path.basename(a.path) : '',
             contentType: a.contentType || '',
           }));
@@ -139,6 +141,33 @@ function main() {
   const startedAt = report.stats?.startTime || new Date().toISOString();
   const durationMs = report.stats?.duration || tests.reduce((sum, t) => sum + t.durationMs, 0);
 
+  // Copy artifacts (screenshots, videos, traces) for failed tests
+  // Clean previous artifacts first
+  if (fs.existsSync(ARTIFACTS_DIR)) {
+    fs.rmSync(ARTIFACTS_DIR, { recursive: true });
+  }
+  fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
+
+  let artifactCount = 0;
+  for (const t of tests) {
+    if (t.status === 'passed') continue;
+    const slug = t.title.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50).toLowerCase();
+    for (const a of t.attachments) {
+      if (!a.sourcePath || !fs.existsSync(a.sourcePath)) continue;
+      const ext = path.extname(a.path) || '';
+      const destName = `${slug}-${a.name}${ext}`;
+      const destPath = path.join(ARTIFACTS_DIR, destName);
+      try {
+        fs.copyFileSync(a.sourcePath, destPath);
+        a.webPath = `./artifacts/${destName}`;
+        artifactCount++;
+      } catch { /* skip if copy fails */ }
+    }
+  }
+  if (artifactCount > 0) {
+    console.log(`Copied ${artifactCount} artifacts to docs/artifacts/`);
+  }
+
   const latest = {
     id: runId,
     startedAt,
@@ -146,7 +175,10 @@ function main() {
     summary: { total, passed, failed, skipped, timedOut },
     passRate,
     modules,
-    tests: tests.map(({ retry, ...rest }) => rest), // remove retry field from output
+    tests: tests.map(({ retry, ...rest }) => ({
+      ...rest,
+      attachments: rest.attachments.map(({ sourcePath, ...a }) => a), // remove sourcePath from output
+    })),
   };
 
   // Write latest.json

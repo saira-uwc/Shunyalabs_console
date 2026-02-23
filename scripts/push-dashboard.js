@@ -21,7 +21,7 @@ function run(cmd) {
 
 function main() {
   // Stage dashboard data files
-  run('git add docs/data/ docs/history/ docs/exports/');
+  run('git add docs/data/ docs/history/ docs/exports/ docs/artifacts/');
 
   // Check if there are staged changes
   const diff = run('git diff --cached --stat');

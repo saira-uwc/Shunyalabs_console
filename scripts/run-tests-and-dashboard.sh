@@ -27,7 +27,7 @@ node scripts/generate-dashboard.js
 if [ "$1" = "--push" ]; then
   echo ""
   echo "▶ Committing and pushing dashboard data..."
-  git add docs/data/ docs/history/ docs/exports/
+  git add docs/data/ docs/history/ docs/exports/ docs/artifacts/
   git commit -m "Update dashboard data — $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
   git push
   echo "✅ Dashboard data pushed to GitHub"

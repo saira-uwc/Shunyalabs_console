@@ -130,7 +130,7 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-
 .modal-test .mt-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;background:var(--panel);border:1px solid var(--panel-border);color:var(--muted)}
 .modal-test .mt-error{margin-top:10px;padding:10px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;font-size:12px;color:#fca5a5;font-family:'Fira Code',monospace;white-space:pre-wrap;max-height:180px;overflow-y:auto;line-height:1.6}
 .modal-test .mt-attachments{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.modal-test .attach-link{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;transition:.15s;border:1px solid var(--panel-border);background:var(--panel);color:var(--muted)}
+.modal-test .attach-link{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;transition:.15s;border:1px solid var(--panel-border);background:var(--panel);color:var(--muted);text-decoration:none}
 .modal-test .attach-link:hover{border-color:var(--accent);color:var(--accent)}
 .modal-test .attach-link svg{width:13px;height:13px;fill:currentColor}
 .modal-actions{display:flex;gap:8px;padding:16px 24px;border-top:1px solid var(--panel-border);align-items:center}
@@ -626,19 +626,12 @@ function renderModalTests(tests, filter) {
     // Build attachment links
     let attachHtml = '';
     if (t.attachments && t.attachments.length > 0) {
-      const links = t.attachments.map(a => {
+      const links = t.attachments.filter(a => a.webPath).map(a => {
         const icon = getAttachIcon(a.name, a.contentType);
         const label = getAttachLabel(a.name, a.contentType);
-        return `<span class="attach-link" title="${esc(a.name)}">${icon} ${label}</span>`;
+        return `<a class="attach-link" href="${a.webPath}" target="_blank" title="${esc(a.name)}">${icon} ${label}</a>`;
       }).join('');
-      attachHtml = `<div class="mt-attachments">${links}</div>`;
-    } else if (t.status !== 'passed') {
-      // Show placeholder attachment buttons for failed tests even without data
-      attachHtml = `<div class="mt-attachments">
-        <span class="attach-link">${svgScreenshot} Screenshot</span>
-        <span class="attach-link">${svgVideo} Video</span>
-        <span class="attach-link">${svgAttach} Trace</span>
-      </div>`;
+      if (links) attachHtml = `<div class="mt-attachments">${links}</div>`;
     }
 
     return `

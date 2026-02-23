@@ -73,7 +73,8 @@ jobs:
             echo "Dashboard data pushed."
           fi
 
-      - name: Send email report
+      - name: Send email report (scheduler only)
+        if: github.event_name == 'repository_dispatch'
         run: node scripts/send-email-report.js
 
       - name: Upload test report

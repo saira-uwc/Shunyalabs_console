@@ -28,7 +28,7 @@
  * - triggerSendEmail() → sends email report only (using latest test data)
  */
 
-function postDispatch(eventType) {
+function postDispatch(eventType, clientPayload) {
   var props = PropertiesService.getScriptProperties();
   var owner = props.getProperty("GITHUB_OWNER");
   var repo = props.getProperty("GITHUB_REPO");
@@ -42,7 +42,11 @@ function postDispatch(eventType) {
 
   var url =
     "https://api.github.com/repos/" + owner + "/" + repo + "/dispatches";
-  var payload = JSON.stringify({ event_type: eventType });
+  var body = { event_type: eventType };
+  if (clientPayload) {
+    body.client_payload = clientPayload;
+  }
+  var payload = JSON.stringify(body);
 
   var options = {
     method: "post",
@@ -68,16 +72,25 @@ function postDispatch(eventType) {
 }
 
 /**
- * Trigger 1 — Run Tests
+ * Trigger 1 — Scheduled Run (with email)
  * Attach this to a time-driven trigger (e.g., every 6 hours).
  * Runs tests → updates sheets → generates dashboard → sends email → pushes.
  */
-function triggerRunTests() {
-  postDispatch("run-tests");
+function scheduledRunTests() {
+  postDispatch("run-tests", { send_email: true });
 }
 
 /**
- * Trigger 2 — Send Email Report Only
+ * Trigger 2 — Manual Run (no email)
+ * Call this manually from Apps Script to run tests without sending email.
+ * Runs tests → updates sheets → generates dashboard → pushes.
+ */
+function triggerRunTests() {
+  postDispatch("run-tests", { send_email: false });
+}
+
+/**
+ * Trigger 3 — Send Email Report Only
  * Attach this to a time-driven trigger (e.g., end of day at 6pm).
  * Sends email report using the latest test data without re-running tests.
  */

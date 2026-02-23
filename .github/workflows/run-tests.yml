@@ -31,12 +31,14 @@ jobs:
 
       - name: Create .env file
         run: |
-          cat <<EOF > .env
+          cat > .env <<EOF
           BASE_URL=https://console.shunyalabs.ai
           LOGIN_URL=https://console.shunyalabs.ai/auth/sign-in
           TEST_EMAIL=${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD=${{ secrets.TEST_PASSWORD }}
           GOOGLE_APPS_SCRIPT_URL=${{ secrets.GOOGLE_APPS_SCRIPT_URL }}
+          EMAIL_WEB_APP_URL=${{ secrets.EMAIL_WEB_APP_URL }}
+          REPORT_RECIPIENTS=${{ secrets.REPORT_RECIPIENTS }}
           EOF
 
       - name: Run Playwright tests
@@ -60,6 +62,9 @@ jobs:
             git push
             echo "Dashboard data pushed."
           fi
+
+      - name: Send email report
+        run: node scripts/send-email-report.js
 
       - name: Upload test report
         if: always()

@@ -18,6 +18,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const LATEST_PATH = path.join(ROOT, 'docs', 'data', 'latest.json');
+const HISTORY_PATH = path.join(ROOT, 'docs', 'history', 'runs.json');
 const EMAIL_URL = process.env.EMAIL_WEB_APP_URL || '';
 const RECIPIENTS = process.env.REPORT_RECIPIENTS || '';
 const DASHBOARD_URL = 'https://saira-uwc.github.io/Shunyalabs_console/';
@@ -43,6 +44,11 @@ function main() {
   }
 
   const data = JSON.parse(fs.readFileSync(LATEST_PATH, 'utf8'));
+  let totalRuns = 1;
+  if (fs.existsSync(HISTORY_PATH)) {
+    try { totalRuns = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8')).length; } catch { /* ignore */ }
+  }
+  data.totalRuns = totalRuns;
   const subject = buildSubject(data);
   const body = buildEmailHTML(data);
 
@@ -144,7 +150,8 @@ function buildEmailHTML(data) {
       <p style="margin:0 0 4px;font-size:13px;opacity:.8">🔴</p>
       <h1 style="margin:0 0 6px;font-size:24px;font-weight:700">QC Automation Report</h1>
       <p style="margin:0 0 4px;font-size:14px;opacity:.9">Shunyalabs Console Automation</p>
-      <p style="margin:0;font-size:13px;opacity:.7">Latest Run: ${dateStr}, ${timeStr}</p>
+      <p style="margin:0 0 8px;font-size:13px;opacity:.7">Latest Run: ${dateStr}, ${timeStr}</p>
+      <span style="display:inline-block;padding:4px 12px;background:rgba(255,255,255,.2);border-radius:12px;font-size:12px;font-weight:600">Total Runs: ${data.totalRuns || 1}</span>
     </td>
   </tr>
 

@@ -68,7 +68,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No dashboard changes to commit."
           else
-            git commit -m "Update dashboard data — $(date -u '+%b %d, %Y %I:%M %p UTC')"
+            git commit -m "Update dashboard data — $(TZ='Asia/Kolkata' date '+%b %d, %Y %I:%M %p IST')"
             git push
             echo "Dashboard data pushed."
           fi

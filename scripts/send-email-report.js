@@ -56,6 +56,7 @@ function buildSubject(data) {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
   return `QC Shunyalabs Console Automation Report – ${dateStr} – ${data.passRate}% Pass Rate`;
 }
@@ -68,11 +69,13 @@ function buildEmailHTML(data) {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
   const timeStr = d.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
+    timeZone: 'Asia/Kolkata',
   }).toLowerCase();
 
   const passRateIcon = data.passRate === 100 ? '✅' : data.passRate >= 80 ? '🟡' : '🔴';

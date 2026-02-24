@@ -99,15 +99,18 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-
 /* ── Calendar ── */
 .calendar-nav{display:flex;align-items:center;gap:16px;margin-bottom:18px}
 .calendar-nav h3{font-size:16px;min-width:180px;text-align:center}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:24px}
-.cal-head{font-size:11px;color:var(--muted);text-align:center;padding:6px}
-.cal-cell{aspect-ratio:1;background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:.12s;position:relative}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:24px}
+.cal-head{font-size:12px;color:var(--muted);text-align:center;padding:8px 0;font-weight:600;text-transform:capitalize}
+.cal-cell{min-height:100px;background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;padding:10px 12px;cursor:pointer;transition:.15s;position:relative;display:flex;flex-direction:column}
 .cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
-.cal-cell:not(.empty):hover{border-color:var(--accent)}
+.cal-cell:not(.empty):hover{border-color:var(--accent);transform:translateY(-1px)}
+.cal-cell.has-runs{border-color:var(--warn);border-width:1.5px}
+.cal-cell.today{background:var(--accent-soft);border-color:var(--accent);border-width:2px}
 .cal-cell.selected{border-color:var(--accent);background:var(--accent-soft)}
-.cal-cell .day{font-weight:600}
-.cal-cell .runs-count{font-size:10px;color:var(--muted)}
-.cal-cell .rate-dot{width:6px;height:6px;border-radius:50%;margin-top:3px}
+.cal-cell .day{font-size:18px;font-weight:700;margin-bottom:auto}
+.cal-cell .cal-runs{font-size:12px;color:var(--muted);margin-top:6px}
+.cal-cell .cal-rate{font-size:12px;font-weight:600;margin-top:2px}
+.calendar-footer{text-align:center;color:var(--muted);font-size:12px;padding:16px 0;border-top:1px solid var(--panel-border);margin-top:8px}
 #calendarRuns{margin-top:8px}
 
 /* ── Modal ── */
@@ -484,7 +487,7 @@ function renderHistory(runs) {
    ══════════════════════════════════════════════════════════ */
 function renderCalendar(runs) {
   const tab = document.getElementById('calendarTab');
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Build run map by date
   const runsByDate = {};
@@ -499,7 +502,10 @@ function renderCalendar(runs) {
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
   const monthName = new Date(calYear, calMonth).toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
-  let cells = days.map(d => `<div class="cal-head">${d}</div>`).join('');
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === calYear && today.getMonth() === calMonth;
+
+  let cells = dayNames.map(d => `<div class="cal-head">${d}</div>`).join('');
   for (let i = 0; i < firstDay; i++) cells += '<div class="cal-cell empty"></div>';
 
   for (let d = 1; d <= daysInMonth; d++) {
@@ -507,13 +513,16 @@ function renderCalendar(runs) {
     const dayRuns = runsByDate[key] || [];
     const count = dayRuns.length;
     const avgRate = count > 0 ? Math.round(dayRuns.reduce((s, r) => s + r.passRate, 0) / count) : -1;
-    const dotColor = avgRate === -1 ? 'transparent' : avgRate >= 80 ? 'var(--pass)' : avgRate >= 50 ? 'var(--warn)' : 'var(--fail)';
+    const rateColor = avgRate >= 80 ? 'var(--pass)' : avgRate >= 50 ? 'var(--warn)' : 'var(--fail)';
+    const isToday = isCurrentMonth && today.getDate() === d;
+    const classes = ['cal-cell'];
+    if (count > 0) classes.push('has-runs');
+    if (isToday) classes.push('today');
 
     cells += `
-      <div class="cal-cell" onclick="selectCalDay(${d})" data-day="${d}">
+      <div class="${classes.join(' ')}" onclick="selectCalDay(${d})" data-day="${d}">
         <div class="day">${d}</div>
-        ${count > 0 ? `<div class="runs-count">${count} run${count > 1 ? 's' : ''}</div>` : ''}
-        <div class="rate-dot" style="background:${dotColor}"></div>
+        ${count > 0 ? `<div class="cal-runs">${count} run${count > 1 ? 's' : ''}</div><div class="cal-rate" style="color:${rateColor}">${avgRate}% pass</div>` : ''}
       </div>
     `;
   }
@@ -526,6 +535,7 @@ function renderCalendar(runs) {
     </div>
     <div class="calendar-grid">${cells}</div>
     <div id="calendarRuns"></div>
+    <div class="calendar-footer">Total runs stored: ${runs.length} | History retention: Last 100 runs</div>
   `;
 }
 

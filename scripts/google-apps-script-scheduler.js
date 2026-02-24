@@ -13,15 +13,19 @@
  *    - GITHUB_PAT    → your GitHub Personal Access Token (needs "repo" scope)
  * 4. Go to Triggers > Add Trigger:
  *
- *    Scheduler trigger (runs tests + sends email):
- *      Function: scheduledRunTests
+ *    Trigger 1 — Run Tests (scheduled):
+ *      Function: triggerRunTests
  *      Event source: Time-driven
  *      Type: choose your frequency (e.g., every 6 hours)
  *
+ *    Trigger 2 — Send Email (scheduled, after tests):
+ *      Function: triggerSendEmail
+ *      Event source: Time-driven
+ *      Type: Day timer → e.g., 6pm to 7pm
+ *
  * How it works:
- * - triggerRunTests()     → dispatches "run-tests"     → tests + sheet + dashboard (NO email)
- * - scheduledRunTests()   → dispatches "scheduled-run"  → tests + sheet + dashboard + EMAIL
- * - triggerSendEmail()    → dispatches "send-email"     → email only (no tests)
+ * - triggerRunTests()   → runs tests, updates sheets & dashboard (NO email)
+ * - triggerSendEmail()  → sends email report only (using latest test data)
  */
 
 function postDispatch(eventType) {
@@ -56,25 +60,10 @@ function postDispatch(eventType) {
   Logger.log("Dispatched '" + eventType + "' to " + owner + "/" + repo);
 }
 
-/**
- * Manual Run — run tests, update sheet & dashboard, NO email.
- * Run this manually from Apps Script editor.
- */
 function triggerRunTests() {
   postDispatch("run-tests");
 }
 
-/**
- * Scheduled Run — run tests, update sheet & dashboard, SEND email.
- * Attach this to your time-driven scheduler trigger.
- */
-function scheduledRunTests() {
-  postDispatch("scheduled-run");
-}
-
-/**
- * Send Email Only — sends email report using latest test data, no tests.
- */
 function triggerSendEmail() {
   postDispatch("send-email");
 }

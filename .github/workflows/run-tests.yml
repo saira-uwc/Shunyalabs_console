@@ -2,7 +2,7 @@ name: Run Tests & Update Dashboard
 
 on:
   repository_dispatch:
-    types: [run-tests]
+    types: [run-tests, scheduled-run]
   workflow_dispatch:
 
 permissions:
@@ -74,7 +74,7 @@ jobs:
           fi
 
       - name: Send email report (scheduler only)
-        if: github.event.client_payload.send_email == true
+        if: github.event.action == 'scheduled-run'
         run: node scripts/send-email-report.js
 
       - name: Upload test report

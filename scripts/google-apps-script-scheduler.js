@@ -11,42 +11,31 @@
  *    - GITHUB_OWNER  → saira-uwc
  *    - GITHUB_REPO   → Shunyalabs_console
  *    - GITHUB_PAT    → your GitHub Personal Access Token (needs "repo" scope)
- * 4. Go to Triggers > Add Trigger (create TWO triggers):
+ * 4. Go to Triggers > Add Trigger:
  *
- *    Trigger 1 — Run Tests (scheduled throughout the day):
- *      Function: triggerRunTests
+ *    Scheduler trigger (runs tests + sends email):
+ *      Function: scheduledRunTests
  *      Event source: Time-driven
- *      Type: choose your frequency (e.g., every 6 hours, or specific times)
- *
- *    Trigger 2 — Send Email Report (end of day):
- *      Function: triggerSendEmail
- *      Event source: Time-driven
- *      Type: Day timer → e.g., 6pm to 7pm
+ *      Type: choose your frequency (e.g., every 6 hours)
  *
  * How it works:
- * - triggerRunTests() → runs tests, updates sheets & dashboard, sends email
- * - triggerSendEmail() → sends email report only (using latest test data)
+ * - triggerRunTests()     → dispatches "run-tests"     → tests + sheet + dashboard (NO email)
+ * - scheduledRunTests()   → dispatches "scheduled-run"  → tests + sheet + dashboard + EMAIL
+ * - triggerSendEmail()    → dispatches "send-email"     → email only (no tests)
  */
 
-function postDispatch(eventType, clientPayload) {
+function postDispatch(eventType) {
   var props = PropertiesService.getScriptProperties();
   var owner = props.getProperty("GITHUB_OWNER");
   var repo = props.getProperty("GITHUB_REPO");
   var token = props.getProperty("GITHUB_PAT");
 
   if (!owner || !repo || !token) {
-    throw new Error(
-      "Missing GITHUB_OWNER, GITHUB_REPO, or GITHUB_PAT in Script Properties."
-    );
+    throw new Error("Missing GITHUB_OWNER/GITHUB_REPO/GITHUB_PAT in script properties.");
   }
 
-  var url =
-    "https://api.github.com/repos/" + owner + "/" + repo + "/dispatches";
-  var body = { event_type: eventType };
-  if (clientPayload) {
-    body.client_payload = clientPayload;
-  }
-  var payload = JSON.stringify(body);
+  var url = "https://api.github.com/repos/" + owner + "/" + repo + "/dispatches";
+  var payload = JSON.stringify({ event_type: eventType });
 
   var options = {
     method: "post",
@@ -60,39 +49,31 @@ function postDispatch(eventType, clientPayload) {
   };
 
   var response = UrlFetchApp.fetch(url, options);
-  var code = response.getResponseCode();
-
-  if (code >= 300) {
-    throw new Error(
-      "GitHub dispatch failed: " + code + " " + response.getContentText()
-    );
+  if (response.getResponseCode() >= 300) {
+    throw new Error("GitHub dispatch failed: " + response.getResponseCode() + " " + response.getContentText());
   }
 
   Logger.log("Dispatched '" + eventType + "' to " + owner + "/" + repo);
 }
 
 /**
- * Trigger 1 — Scheduled Run (with email)
- * Attach this to a time-driven trigger (e.g., every 6 hours).
- * Runs tests → updates sheets → generates dashboard → sends email → pushes.
- */
-function scheduledRunTests() {
-  postDispatch("run-tests", { send_email: true });
-}
-
-/**
- * Trigger 2 — Manual Run (no email)
- * Call this manually from Apps Script to run tests without sending email.
- * Runs tests → updates sheets → generates dashboard → pushes.
+ * Manual Run — run tests, update sheet & dashboard, NO email.
+ * Run this manually from Apps Script editor.
  */
 function triggerRunTests() {
-  postDispatch("run-tests", { send_email: false });
+  postDispatch("run-tests");
 }
 
 /**
- * Trigger 3 — Send Email Report Only
- * Attach this to a time-driven trigger (e.g., end of day at 6pm).
- * Sends email report using the latest test data without re-running tests.
+ * Scheduled Run — run tests, update sheet & dashboard, SEND email.
+ * Attach this to your time-driven scheduler trigger.
+ */
+function scheduledRunTests() {
+  postDispatch("scheduled-run");
+}
+
+/**
+ * Send Email Only — sends email report using latest test data, no tests.
  */
 function triggerSendEmail() {
   postDispatch("send-email");

@@ -1,9 +1,10 @@
 name: Deploy Dashboard to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Run Tests & Update Dashboard"]
+    types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,9 +17,12 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs

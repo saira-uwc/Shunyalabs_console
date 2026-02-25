@@ -65,11 +65,16 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "--- Generated files ---"
+          ls -la docs/data/ docs/history/ docs/exports/ || true
           git add docs/data/ docs/history/ docs/exports/ docs/artifacts/
+          echo "--- Git status after add ---"
+          git status
           if git diff --cached --quiet; then
             echo "No dashboard changes to commit."
           else
             git commit -m "Update dashboard data — $(TZ='Asia/Kolkata' date '+%b %d, %Y %I:%M %p IST')"
+            git pull --rebase origin main
             git push
             echo "Dashboard data pushed."
           fi

@@ -63,19 +63,17 @@ jobs:
 
       - name: Commit and push dashboard data
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "--- Generated files ---"
-          ls -la docs/data/ docs/history/ docs/exports/ || true
+          git fetch origin main
+          git reset --mixed origin/main
           git add docs/data/ docs/history/ docs/exports/ docs/artifacts/
-          echo "--- Git status after add ---"
-          git status
           if git diff --cached --quiet; then
             echo "No dashboard changes to commit."
           else
             git commit -m "Update dashboard data — $(TZ='Asia/Kolkata' date '+%b %d, %Y %I:%M %p IST')"
-            git pull --rebase origin main
-            git push
+            git push origin HEAD:main
             echo "Dashboard data pushed."
           fi
 
